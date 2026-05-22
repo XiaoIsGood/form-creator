@@ -36,12 +36,6 @@
 
     <script src="form-creator.js"></script>
     <script>
-      // 命名校验器 — 对应 JSON 中 validator 字段的值
-      const validators = {
-        notAdmin: (v) => v !== 'admin',
-        mustAgree: (v) => v === true,
-      };
-
       // 从 JSON 文件加载 schema 配置
       fetch('./schema-example.json')
         .then((res) => res.json())
@@ -49,7 +43,6 @@
           const form = new FormCreator({
             container: '#form',
             schema: schema,
-            validators: validators,
           });
 
           const $output = document.getElementById('output');

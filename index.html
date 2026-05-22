@@ -49,7 +49,7 @@
             { required: true, message: '用户名不能为空' },
             { min: 3, message: '至少3个字符' },
             { max: 20, message: '最多20个字符' },
-            { validator: 'notAdmin', message: '该用户名不可用' },
+            { custom: "v !== 'admin'", message: '该用户名不可用' },
           ],
         },
         {
@@ -174,9 +174,6 @@
       const form = new FormCreator({
         container: '#form',
         schema: schema,
-        validators: {
-          notAdmin: (v) => v !== 'admin',
-        },
       });
 
       // Display values and validation on change

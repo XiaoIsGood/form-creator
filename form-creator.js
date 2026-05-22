@@ -549,4 +549,27 @@ input[type="color"].fc-input {
     };
   }
 
+  // ========== Component Registry ==========
+  const COMPONENT_MAP = Object.freeze({
+    text: renderText,
+    password: renderPassword,
+    number: renderNumber,
+    textarea: renderTextarea,
+    select: renderSelect,
+    radio: renderRadio,
+    checkbox: renderCheckbox,
+    switch: renderSwitch,
+    date: renderDate,
+    time: renderTime,
+    color: renderColor,
+    slider: renderSlider,
+    file: renderFile,
+  });
+
+  function renderField(field, onChange, validators) {
+    const renderer = COMPONENT_MAP[field.type];
+    if (!renderer) throw new Error(`Unknown field type: "${field.type}"`);
+    return renderer(field, onChange, validators);
+  }
+
 })();

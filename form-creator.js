@@ -76,7 +76,7 @@
   background: #f9fafb !important; min-height: 38px !important;
   display: flex !important; align-items: center !important;
   color: #333 !important; user-select: none !important;
-  overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important;
+  width: 100% !important; word-break: break-all !important; white-space: normal !important;
 }
 .form-creator .fc-display--placeholder { color: #999 !important; }
 

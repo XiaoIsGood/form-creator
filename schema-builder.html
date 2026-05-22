@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schema Builder - FormCreator</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, sans-serif; background: #f0f2f5; min-height: 100vh; }
+.header { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+.header h1 { font-size: 18px; color: #333; }
+.header span { font-size: 13px; color: #999; }
+.wrap { display: flex; height: calc(100vh - 57px); }
+.panel { background: #fff; border-right: 1px solid #e0e0e0; width: 360px; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.panel h3 { font-size: 14px; color: #333; margin-bottom: 4px; }
+.field-types { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.ft-btn { padding: 8px 6px; font-size: 12px; border: 1px solid #d9d9d9; border-radius: 4px; background: #fff; cursor: pointer; text-align: center; transition: .15s; }
+.ft-btn:hover { border-color: #4a90d9; color: #4a90d9; }
+.ft-btn.added { background: #e6f2ff; border-color: #4a90d9; color: #4a90d9; }
+.editor { flex: 1; overflow-y: auto; padding: 16px; }
+.editor h3 { font-size: 14px; color: #333; margin-bottom: 12px; }
+.field-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+.field-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.field-card-header .name { font-weight: 600; font-size: 14px; }
+.field-card-header .type { font-size: 11px; color: #999; background: #f5f5f5; padding: 2px 8px; border-radius: 3px; }
+.field-card-header button { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 13px; }
+.form-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+.form-row label { width: 70px; font-size: 12px; color: #666; flex-shrink: 0; text-align: right; }
+.form-row input, .form-row select { flex: 1; padding: 5px 8px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 13px; }
+.form-row input:focus, .form-row select:focus { border-color: #4a90d9; outline: none; }
+.form-row input[type="checkbox"] { flex: 0; width: 16px; height: 16px; }
+.rules-section { margin-top: 8px; border-top: 1px dashed #eee; padding-top: 8px; }
+.rules-section .title { font-size: 12px; color: #999; margin-bottom: 6px; cursor: pointer; }
+.rule-row { display: flex; gap: 6px; margin-bottom: 4px; align-items: center; }
+.rule-row select { width: 80px; padding: 4px 6px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 12px; }
+.rule-row input { flex: 1; padding: 4px 6px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 12px; }
+.rule-row button { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 16px; }
+.output-panel { background: #1e1e1e; width: 380px; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.output-panel h3 { font-size: 14px; color: #ccc; }
+.output-panel pre { flex: 1; background: #2d2d2d; border-radius: 6px; padding: 14px; font-size: 12px; color: #d4d4d4; white-space: pre-wrap; word-break: break-all; overflow-y: auto; }
+.output-panel button { padding: 8px; background: #4a90d9; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
+.output-panel button:hover { background: #3a7bc8; }
+.empty-hint { color: #bbb; text-align: center; padding: 60px 0; font-size: 14px; }
+.btn-add-rule { font-size: 12px; color: #4a90d9; cursor: pointer; background: none; border: none; margin-top: 4px; }
+.options-input { display: flex; flex-direction: column; gap: 4px; }
+.options-input .opt-row { display: flex; gap: 4px; }
+.options-input .opt-row input { flex: 1; padding: 4px 6px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 12px; }
+.options-input .opt-row button { background: none; border: none; color: #e74c3c; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>FormCreator Schema Builder</h1>
+  <span>可视化构建 JSON Schema</span>
+</div>
+<div class="wrap">
+  <!-- 左侧：组件面板 -->
+  <div class="panel">
+    <h3>添加组件</h3>
+    <div class="field-types" id="fieldTypes"></div>
+    <div style="margin-top:12px;font-size:12px;color:#999;">
+      点击组件添加到表单，然后在右侧配置属性
+    </div>
+  </div>
+
+  <!-- 中间：编辑器 -->
+  <div class="editor" id="editor">
+    <h3>表单字段</h3>
+    <div id="fieldCards"></div>
+  </div>
+
+  <!-- 右侧：JSON 输出 -->
+  <div class="output-panel">
+    <h3>Schema JSON</h3>
+    <pre id="output"></pre>
+    <button onclick="copyOutput()">复制 JSON</button>
+    <button style="background:#52c41a;margin-top:4px" onclick="singlePreview()">预览表单</button>
+    <button style="background:#ff9800;margin-top:4px" onclick="jsonPreview()">JSON 加载预览</button>
+  </div>
+</div>
+
+<script src="form-creator.js"></script>
+<script>
+// ========== 组件类型定义 ==========
+const FIELD_TYPES = [
+  { type: 'text', label: '文本输入', icon: '📝' },
+  { type: 'password', label: '密码', icon: '🔒' },
+  { type: 'number', label: '数字', icon: '🔢' },
+  { type: 'textarea', label: '文本域', icon: '📄' },
+  { type: 'switch', label: '开关', icon: '🔘' },
+  { type: 'select', label: '下拉选择', icon: '📋' },
+  { type: 'radio', label: '单选', icon: '🔘' },
+  { type: 'checkbox', label: '多选', icon: '☑' },
+  { type: 'date', label: '日期', icon: '📅' },
+  { type: 'time', label: '时间', icon: '⏰' },
+  { type: 'color', label: '颜色', icon: '🎨' },
+  { type: 'slider', label: '滑块', icon: '🎚' },
+  { type: 'file', label: '文件上传', icon: '📁' },
+];
+
+const OPTION_TYPES = ['select', 'radio', 'checkbox'];
+
+// ========== 状态 ==========
+const fields = [];
+
+// ========== 渲染 ==========
+function render() {
+  renderFieldTypes();
+  renderFieldCards();
+  renderOutput();
+}
+
+function renderFieldTypes() {
+  const el = document.getElementById('fieldTypes');
+  el.innerHTML = FIELD_TYPES.map(ft => {
+    const added = fields.some(f => f._id === ft.type && fields.filter(x => x._id === ft.type).length > 0);
+    return `<button class="ft-btn" onclick="addField('${ft.type}')">${ft.icon} ${ft.label}</button>`;
+  }).join('');
+}
+
+function renderFieldCards() {
+  const el = document.getElementById('fieldCards');
+  if (fields.length === 0) {
+    el.innerHTML = '<div class="empty-hint">👆 从左侧添加表单组件</div>';
+    return;
+  }
+  el.innerHTML = fields.map((f, idx) => {
+    const ft = FIELD_TYPES.find(t => t.type === f.type);
+    let extraHtml = '';
+    if (OPTION_TYPES.includes(f.type)) {
+      extraHtml = `
+        <div class="form-row"><label>选项</label>
+          <div class="options-input">
+            ${(f.options || []).map((opt, oi) => `
+              <div class="opt-row">
+                <input value="${typeof opt === 'string' ? opt : opt.value}" placeholder="值"
+                  onchange="updateOptValue(${idx},${oi},this.value)">
+                <input value="${typeof opt === 'string' ? opt : (opt.label||'')}" placeholder="标签(可选)"
+                  onchange="updateOptLabel(${idx},${oi},this.value)">
+                <button onclick="removeOpt(${idx},${oi})">×</button>
+              </div>
+            `).join('')}
+            <button class="btn-add-rule" onclick="addOpt(${idx})">+ 添加选项</button>
+          </div>
+        </div>`;
+    }
+    if (f.type === 'number' || f.type === 'slider') {
+      extraHtml += `
+        <div class="form-row"><label>最小值</label><input type="number" value="${f.min ?? ''}" onchange="updateField(${idx},'min',this.value ? Number(this.value) : undefined)"></div>
+        <div class="form-row"><label>最大值</label><input type="number" value="${f.max ?? ''}" onchange="updateField(${idx},'max',this.value ? Number(this.value) : undefined)"></div>
+        <div class="form-row"><label>步长</label><input type="number" value="${f.step ?? ''}" onchange="updateField(${idx},'step',this.value ? Number(this.value) : undefined)"></div>`;
+    }
+    if (f.type === 'textarea') {
+      extraHtml += `<div class="form-row"><label>行数</label><input type="number" value="${f.rows || 4}" onchange="updateField(${idx},'rows',Number(this.value))"></div>`;
+    }
+    if (f.type === 'text' || f.type === 'password' || f.type === 'textarea') {
+      extraHtml += `<div class="form-row"><label>最大长度</label><input type="number" value="${f.maxlength ?? ''}" onchange="updateField(${idx},'maxlength',this.value ? Number(this.value) : undefined)"></div>`;
+    }
+    if (f.type === 'file') {
+      extraHtml += `<div class="form-row"><label>文件类型</label><input value="${f.accept || ''}" placeholder=".jpg,.png" onchange="updateField(${idx},'accept',this.value)"></div>`;
+      extraHtml += `<div class="form-row"><label>多选</label><input type="checkbox" ${f.multiple ? 'checked' : ''} onchange="updateField(${idx},'multiple',this.checked)"></div>`;
+    }
+    if (f.type === 'radio' || f.type === 'checkbox') {
+      extraHtml += `<div class="form-row"><label>竖排</label><input type="checkbox" ${f.mode === 'column' ? 'checked' : ''} onchange="updateField(${idx},'mode',this.checked ? 'column' : undefined)"></div>`;
+    }
+    if (f.type === 'select') {
+      extraHtml += `<div class="form-row"><label>多选</label><input type="checkbox" ${f.multiple ? 'checked' : ''} onchange="updateField(${idx},'multiple',this.checked)"></div>`;
+    }
+
+    return `
+      <div class="field-card">
+        <div class="field-card-header">
+          <span class="name">${f.label || '未命名字段'}</span>
+          <span class="type">${ft.icon} ${ft.label}</span>
+          <button onclick="removeField(${idx})" title="删除">×</button>
+        </div>
+        <div class="form-row"><label>字段名</label><input value="${f.name || ''}" placeholder="name" onchange="updateField(${idx},'name',this.value)"></div>
+        <div class="form-row"><label>标签</label><input value="${f.label || ''}" placeholder="label" onchange="updateField(${idx},'label',this.value)"></div>
+        <div class="form-row"><label>占位文字</label><input value="${f.placeholder || ''}" placeholder="placeholder" onchange="updateField(${idx},'placeholder',this.value)"></div>
+        <div class="form-row"><label>默认值</label><input value="${f.defaultValue ?? ''}" placeholder="defaultValue" onchange="updateField(${idx},'defaultValue',fixValue(${idx},this.value))"></div>
+        <div class="form-row"><label>禁用</label><input type="checkbox" ${f.disabled ? 'checked' : ''} onchange="updateField(${idx},'disabled',this.checked)"></div>
+        ${extraHtml}
+        <div class="rules-section">
+          <div class="title">校验规则 (${(f.rules||[]).length})</div>
+          ${(f.rules||[]).map((r, ri) => `
+            <div class="rule-row">
+              <select onchange="updateRule(${idx},${ri},'type',this.value)">
+                <option value="required" ${r.required != null ? 'selected' : ''}>必填</option>
+                <option value="pattern" ${r.pattern != null ? 'selected' : ''}>正则</option>
+                <option value="min" ${r.min != null ? 'selected' : ''}>最小</option>
+                <option value="max" ${r.max != null ? 'selected' : ''}>最大</option>
+                <option value="validator" ${r.validator != null ? 'selected' : ''}>命名校验</option>
+                <option value="custom" ${r.custom != null ? 'selected' : ''}>自定义</option>
+              </select>
+              <input value="${r.message || ''}" placeholder="错误提示" onchange="updateRule(${idx},${ri},'message',this.value)">
+              ${renderRuleValueInput(idx, ri, r)}
+              <button onclick="removeRule(${idx},${ri})">×</button>
+            </div>
+          `).join('')}
+          <button class="btn-add-rule" onclick="addRule(${idx})">+ 添加规则</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderRuleValueInput(idx, ri, r) {
+  if (r.pattern != null) return `<input value="${r.pattern}" placeholder="正则表达式" onchange="updateRule(${idx},${ri},'pattern',this.value)">`;
+  if (r.min != null) return `<input type="number" value="${r.min}" placeholder="最小值" onchange="updateRule(${idx},${ri},'min',Number(this.value))">`;
+  if (r.max != null) return `<input type="number" value="${r.max}" placeholder="最大值" onchange="updateRule(${idx},${ri},'max',Number(this.value))">`;
+  if (r.validator != null) return `<input value="${r.validator}" placeholder="函数名" onchange="updateRule(${idx},${ri},'validator',this.value)">`;
+  if (r.custom != null) {
+    const val = typeof r.custom === 'function' ? r.custom.toString() : (r.custom || '');
+    return `<input value="${escapeHtml(val)}" placeholder="表达式" onchange="updateRule(${idx},${ri},'custom',this.value)">`;
+  }
+  if (r.required != null) return '';
+  return '';
+}
+
+function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function renderOutput() {
+  const schema = buildSchema();
+  document.getElementById('output').textContent = JSON.stringify(schema, null, 2);
+}
+
+// ========== 构建 Schema ==========
+function buildSchema() {
+  return fields.map(f => {
+    const out = { type: f.type, name: f.name || '' };
+    if (f.label) out.label = f.label;
+    if (f.placeholder) out.placeholder = f.placeholder;
+    if (f.defaultValue != null && f.defaultValue !== '') out.defaultValue = f.defaultValue;
+    if (f.disabled) out.disabled = true;
+    if (f.options && f.options.length) out.options = f.options;
+    if (f.min != null) out.min = f.min;
+    if (f.max != null) out.max = f.max;
+    if (f.step != null) out.step = f.step;
+    if (f.rows != null) out.rows = f.rows;
+    if (f.maxlength != null) out.maxlength = f.maxlength;
+    if (f.accept) out.accept = f.accept;
+    if (f.multiple) out.multiple = true;
+    if (f.mode) out.mode = f.mode;
+    if (f.rules && f.rules.length) out.rules = f.rules.filter(r => {
+      if (r.required != null) return r.required;
+      if (r.pattern != null) return true;
+      if (r.min != null) return true;
+      if (r.max != null) return true;
+      if (r.validator != null) return true;
+      if (r.custom != null) return true;
+      return false;
+    }).map(r => {
+      const clean = {};
+      if (r.required != null) clean.required = r.required;
+      if (r.pattern != null) clean.pattern = r.pattern;
+      if (r.min != null) clean.min = r.min;
+      if (r.max != null) clean.max = r.max;
+      if (r.validator != null) clean.validator = r.validator;
+      if (r.custom != null) clean.custom = r.custom;
+      if (r.message) clean.message = r.message;
+      return clean;
+    });
+    return out;
+  });
+}
+
+// ========== 操作 ==========
+let _idCounter = 0;
+function addField(type) {
+  const base = { _id: type + '_' + (_idCounter++), type, name: '', label: '', placeholder: '', defaultValue: '', disabled: false, rules: [] };
+  if (OPTION_TYPES.includes(type)) base.options = [];
+  if (type === 'switch') base.defaultValue = false;
+  if (type === 'checkbox') base.defaultValue = [];
+  if (type === 'number' || type === 'slider') { base.min = undefined; base.max = undefined; base.step = undefined; }
+  fields.push(base);
+  render();
+}
+
+function removeField(idx) { fields.splice(idx, 1); render(); }
+function updateField(idx, key, val) { fields[idx][key] = val; render(); }
+function fixValue(idx, val) {
+  const f = fields[idx];
+  if (f.type === 'number') return val === '' ? '' : Number(val);
+  if (f.type === 'switch') return val === 'true';
+  return val;
+}
+
+// Options
+function addOpt(idx) { if (!fields[idx].options) fields[idx].options = []; fields[idx].options.push(''); render(); }
+function removeOpt(idx, oi) { fields[idx].options.splice(oi, 1); render(); }
+function updateOptValue(idx, oi, val) {
+  const opt = fields[idx].options[oi];
+  if (typeof opt === 'string') fields[idx].options[oi] = val;
+  else fields[idx].options[oi] = { ...opt, value: val };
+  render();
+}
+function updateOptLabel(idx, oi, val) {
+  const opt = fields[idx].options[oi];
+  if (typeof opt === 'string') { if (val) fields[idx].options[oi] = { value: opt, label: val }; }
+  else fields[idx].options[oi] = { ...opt, label: val || undefined };
+  render();
+}
+
+// Rules
+function addRule(idx) { if (!fields[idx].rules) fields[idx].rules = []; fields[idx].rules.push({ required: true, message: '此项必填' }); render(); }
+function removeRule(idx, ri) { fields[idx].rules.splice(ri, 1); render(); }
+function updateRule(idx, ri, key, val) {
+  const rule = fields[idx].rules[ri];
+  // Clear other rule types when switching
+  if (key === 'type') {
+    fields[idx].rules[ri] = { message: rule.message || '' };
+    if (val === 'required') fields[idx].rules[ri].required = true;
+    else if (val === 'pattern') fields[idx].rules[ri].pattern = '';
+    else if (val === 'min') fields[idx].rules[ri].min = 0;
+    else if (val === 'max') fields[idx].rules[ri].max = 0;
+    else if (val === 'validator') fields[idx].rules[ri].validator = '';
+    else if (val === 'custom') fields[idx].rules[ri].custom = '';
+    fields[idx].rules[ri].message = rule.message || '';
+  } else {
+    fields[idx].rules[ri][key] = val;
+  }
+  render();
+}
+
+// Output
+function copyOutput() {
+  navigator.clipboard.writeText(JSON.stringify(buildSchema(), null, 2));
+  alert('已复制到剪贴板');
+}
+
+function singlePreview() {
+  const html = previewHtml();
+  const w = window.open('', '_blank');
+  w.document.write(html);
+}
+
+function jsonPreview() {
+  const html = jsonPreviewHtml();
+  const w = window.open('', '_blank');
+  w.document.write(html);
+}
+
+function previewHtml() {
+  const schema = buildSchema();
+  return `<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><title>Preview</title>
+<style>body{max-width:500px;margin:40px auto;padding:0 20px;font-family:system-ui,sans-serif}</style></head><body>
+<div id="form" class="form-creator"></div>
+<script src="form-creator.js"><\/script>
+<script>
+new FormCreator({ container:'#form', schema:${JSON.stringify(schema)} });
+<\/script></body></html>`;
+}
+
+function jsonPreviewHtml() {
+  const json = JSON.stringify(buildSchema(), null, 2);
+  return `<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><title>Preview JSON</title>
+<style>body{max-width:500px;margin:40px auto;padding:0 20px;font-family:system-ui,sans-serif}</style></head><body>
+<div id="form" class="form-creator"></div>
+<script src="form-creator.js"><\/script>
+<script>
+fetch('data:application/json,'+encodeURIComponent('${json.replace(/'/g, "\\'")}')).then(r=>r.json()).then(schema=>{
+  new FormCreator({ container:'#form', schema:schema });
+});
+<\/script></body></html>`;
+}
+
+// Initial
+render();
+</script>
+</body>
+</html>

@@ -58,6 +58,8 @@ body { font-family: system-ui, sans-serif; background: #f0f2f5; min-height: 100v
   <div class="panel">
     <h3>添加组件</h3>
     <div class="field-types" id="fieldTypes"></div>
+    <h3 style="margin-top:16px">常用预设</h3>
+    <div class="field-types" id="presets"></div>
     <div style="margin-top:12px;font-size:12px;color:#999;">
       点击组件添加到表单，然后在右侧配置属性
     </div>
@@ -98,6 +100,21 @@ const FIELD_TYPES = [
   { type: 'file', label: '文件上传', icon: '📁' },
 ];
 
+const PRESETS = [
+  {
+    label: '📱 手机号', type: 'text', name: 'phone', placeholder: '请输入手机号', maxlength: 11,
+    rules: [{ required: true, message: '手机号不能为空' }, { pattern: '^1[3-9]\\d{9}$', message: '请填写正确的手机号' }],
+  },
+  {
+    label: '📧 邮箱', type: 'text', name: 'email', placeholder: '请输入邮箱地址',
+    rules: [{ required: true, message: '邮箱不能为空' }, { pattern: '^.+@.+\\..+$', message: '请填写正确的邮箱' }],
+  },
+  {
+    label: '🆔 身份证号', type: 'text', name: 'idCard', placeholder: '请输入身份证号', maxlength: 18,
+    rules: [{ required: true, message: '身份证号不能为空' }, { pattern: '^\\d{17}[\\dXx]$', message: '请填写正确的身份证号' }],
+  },
+];
+
 const OPTION_TYPES = ['select', 'radio', 'checkbox'];
 
 // ========== 状态 ==========
@@ -106,6 +123,7 @@ const fields = [];
 // ========== 渲染 ==========
 function render() {
   renderFieldTypes();
+  renderPresets();
   renderFieldCards();
   renderOutput();
 }
@@ -116,6 +134,13 @@ function renderFieldTypes() {
     const added = fields.some(f => f._id === ft.type && fields.filter(x => x._id === ft.type).length > 0);
     return `<button class="ft-btn" onclick="addField('${ft.type}')">${ft.icon} ${ft.label}</button>`;
   }).join('');
+}
+
+function renderPresets() {
+  const el = document.getElementById('presets');
+  el.innerHTML = PRESETS.map((p, i) =>
+    `<button class="ft-btn" onclick="addPreset(${i})">${p.label}</button>`
+  ).join('');
 }
 
 function renderFieldCards() {
@@ -269,6 +294,14 @@ function buildSchema() {
 
 // ========== 操作 ==========
 let _idCounter = 0;
+function addPreset(idx) {
+  const p = PRESETS[idx];
+  const base = { _id: 'preset_' + (_idCounter++), type: p.type, name: p.name, label: p.label, placeholder: p.placeholder || '', defaultValue: p.defaultValue || '', disabled: false, rules: JSON.parse(JSON.stringify(p.rules || [])) };
+  if (p.maxlength) base.maxlength = p.maxlength;
+  fields.push(base);
+  render();
+}
+
 function addField(type) {
   const base = { _id: type + '_' + (_idCounter++), type, name: '', label: '', placeholder: '', defaultValue: '', disabled: false, rules: [] };
   if (OPTION_TYPES.includes(type)) base.options = [];

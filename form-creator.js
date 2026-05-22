@@ -640,10 +640,11 @@
 
   // ========== FormField Class ==========
   class FormField {
-    constructor(fieldConfig, onChange, validators) {
+    constructor(fieldConfig, onChange, validators, validateOnBlur) {
       this.config = fieldConfig;
       this._onChange = onChange;
       this._validators = validators;
+      this._validateOnBlur = validateOnBlur !== false;
 
       const component = renderField(fieldConfig, () => this._handleChange(), validators);
       this.$el = component.$el;
@@ -677,7 +678,7 @@
     }
 
     _handleChange() {
-      if (this._touched) this.validate();
+      if (this._validateOnBlur && this._touched) this.validate();
       this._onChange();
     }
   }
@@ -689,6 +690,7 @@
       this._options = options;
       this._validators = options.validators || {};
       this._layout = options.layout || 'vertical';
+      this._validateOnBlur = options.validateOnBlur !== false;
       this._listeners = [];
 
       // Resolve container
@@ -720,7 +722,8 @@
         const field = new FormField(
           fieldConfig,
           () => this._notify(fieldConfig.name),
-          this._validators
+          this._validators,
+          this._validateOnBlur
         );
 
         // Apply layout class

@@ -184,4 +184,66 @@ input[type="color"].fc-input {
     });
   }
 
+  // ========== Validation Engine ==========
+  function validateField(value, rules, validators) {
+    if (!rules || rules.length === 0) return [];
+
+    const errors = [];
+    for (const rule of rules) {
+      // required check
+      if (rule.required) {
+        const empty = value == null || value === '' ||
+          (Array.isArray(value) && value.length === 0) ||
+          (typeof value === 'boolean' && value === false);
+        if (empty) {
+          errors.push(rule.message || '此项必填');
+          continue;
+        }
+      }
+
+      // Skip other validations if value is empty and not required
+      const isEmpty = value == null || value === '' || (Array.isArray(value) && value.length === 0);
+      if (isEmpty) continue;
+
+      // pattern
+      if (rule.pattern) {
+        const regex = new RegExp(rule.pattern);
+        if (!regex.test(String(value))) {
+          errors.push(rule.message || '格式不正确');
+        }
+      }
+
+      // min
+      if (rule.min !== undefined) {
+        const num = Array.isArray(value) ? value.length : (typeof value === 'string' ? value.length : Number(value));
+        if (num < rule.min) {
+          errors.push(rule.message || `最小值 ${rule.min}`);
+        }
+      }
+
+      // max
+      if (rule.max !== undefined) {
+        const num = Array.isArray(value) ? value.length : (typeof value === 'string' ? value.length : Number(value));
+        if (num > rule.max) {
+          errors.push(rule.message || `最大值 ${rule.max}`);
+        }
+      }
+
+      // named validator from validators map
+      if (rule.validator && validators && typeof validators[rule.validator] === 'function') {
+        if (!validators[rule.validator](value)) {
+          errors.push(rule.message || '校验失败');
+        }
+      }
+
+      // custom function (JS object only, not JSON-safe)
+      if (rule.custom && typeof rule.custom === 'function') {
+        if (!rule.custom(value)) {
+          errors.push(rule.message || '校验失败');
+        }
+      }
+    }
+    return errors;
+  }
+
 })();

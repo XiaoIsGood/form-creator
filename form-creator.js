@@ -77,6 +77,7 @@
   display: flex !important; align-items: center !important;
   color: #333 !important; user-select: none !important;
 }
+.form-creator .fc-display--placeholder { color: #999 !important; }
 
 .form-creator .fc-field--error .fc-input,
 .form-creator .fc-field--error .fc-switch__slider,
@@ -361,9 +362,19 @@
     const { $el, $control, $error } = createFieldWrapper(field);
     const $display = document.createElement('div');
     $display.className = 'fc-input fc-display';
-    $display.textContent = field.defaultValue || '';
+    const val = field.defaultValue || '';
+    $display.textContent = val || field.placeholder || '';
+    if (!val) $display.classList.add('fc-display--placeholder');
     $control.appendChild($display);
-    return { $el, $input: $display, $error, getValue: () => $display.textContent, setValue: (v) => { $display.textContent = v ?? ''; } };
+    return {
+      $el, $input: $display, $error,
+      getValue: () => $display.textContent,
+      setValue: (v) => {
+        $display.textContent = v ?? '';
+        if ($display.textContent) $display.classList.remove('fc-display--placeholder');
+        else $display.classList.add('fc-display--placeholder');
+      }
+    };
   }
 
   function renderPassword(field, onChange) {

@@ -257,4 +257,88 @@ input[type="color"].fc-input {
     return errors;
   }
 
+  // ========== Component Renderers ==========
+
+  // Shared helper: build field wrapper with label, control area, and error slot
+  function createFieldWrapper(field) {
+    const $el = document.createElement('div');
+    $el.className = `fc-field fc-field--${field.type}`;
+    if (field.disabled) $el.classList.add('fc-field--disabled');
+
+    const $label = document.createElement('label');
+    $label.className = 'fc-field__label';
+    $label.textContent = field.label;
+
+    const $control = document.createElement('div');
+    $control.className = 'fc-field__control';
+
+    const $error = document.createElement('p');
+    $error.className = 'fc-field__error';
+
+    if (field.label) $el.appendChild($label);
+    $el.appendChild($control);
+    $el.appendChild($error);
+
+    return { $el, $label, $control, $error };
+  }
+
+  // Shared helper: create standard <input>
+  function createInput(field, type) {
+    const $input = document.createElement('input');
+    $input.type = type;
+    $input.name = field.name;
+    $input.className = 'fc-input';
+    if (field.placeholder) $input.placeholder = field.placeholder;
+    if (field.disabled) $input.disabled = true;
+    return $input;
+  }
+
+  function renderText(field, onChange) {
+    const { $el, $control, $error } = createFieldWrapper(field);
+    const $input = createInput(field, 'text');
+    $input.value = field.defaultValue || '';
+    $control.appendChild($input);
+    $input.addEventListener('input', onChange);
+    $input.addEventListener('blur', onChange);
+    return { $el, $input, $error, getValue: () => $input.value, setValue: (v) => { $input.value = v ?? ''; } };
+  }
+
+  function renderPassword(field, onChange) {
+    const { $el, $control, $error } = createFieldWrapper(field);
+    const $input = createInput(field, 'password');
+    $input.value = field.defaultValue || '';
+    $control.appendChild($input);
+    $input.addEventListener('input', onChange);
+    $input.addEventListener('blur', onChange);
+    return { $el, $input, $error, getValue: () => $input.value, setValue: (v) => { $input.value = v ?? ''; } };
+  }
+
+  function renderNumber(field, onChange) {
+    const { $el, $control, $error } = createFieldWrapper(field);
+    const $input = createInput(field, 'number');
+    $input.value = field.defaultValue ?? '';
+    if (field.min !== undefined) $input.min = field.min;
+    if (field.max !== undefined) $input.max = field.max;
+    if (field.step !== undefined) $input.step = field.step;
+    $control.appendChild($input);
+    $input.addEventListener('input', onChange);
+    $input.addEventListener('blur', onChange);
+    return { $el, $input, $error, getValue: () => $input.value === '' ? '' : Number($input.value), setValue: (v) => { $input.value = v ?? ''; } };
+  }
+
+  function renderTextarea(field, onChange) {
+    const { $el, $control, $error } = createFieldWrapper(field);
+    const $textarea = document.createElement('textarea');
+    $textarea.name = field.name;
+    $textarea.className = 'fc-input';
+    $textarea.rows = field.rows || 4;
+    $textarea.value = field.defaultValue || '';
+    if (field.placeholder) $textarea.placeholder = field.placeholder;
+    if (field.disabled) $textarea.disabled = true;
+    $control.appendChild($textarea);
+    $textarea.addEventListener('input', onChange);
+    $textarea.addEventListener('blur', onChange);
+    return { $el, $input: $textarea, $error, getValue: () => $textarea.value, setValue: (v) => { $textarea.value = v ?? ''; } };
+  }
+
 })();

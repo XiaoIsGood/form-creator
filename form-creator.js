@@ -572,4 +572,48 @@ input[type="color"].fc-input {
     return renderer(field, onChange, validators);
   }
 
+  // ========== FormField Class ==========
+  class FormField {
+    constructor(fieldConfig, onChange, validators) {
+      this.config = fieldConfig;
+      this._onChange = onChange;
+      this._validators = validators;
+
+      const component = renderField(fieldConfig, () => this._handleChange(), validators);
+      this.$el = component.$el;
+      this._$error = component.$error;
+      this._$input = component.$input;
+      this._component = component;
+      this._touched = false;
+      this._errors = [];
+    }
+
+    getValue() {
+      return this._component.getValue();
+    }
+
+    setValue(val) {
+      this._component.setValue(val);
+      if (this._touched) this.validate();
+    }
+
+    validate() {
+      this._touched = true;
+      this._errors = validateField(this.getValue(), this.config.rules, this._validators);
+      if (this._errors.length > 0) {
+        this.$el.classList.add('fc-field--error');
+        if (this._$error) this._$error.textContent = this._errors[0];
+      } else {
+        this.$el.classList.remove('fc-field--error');
+        if (this._$error) this._$error.textContent = '';
+      }
+      return this._errors;
+    }
+
+    _handleChange() {
+      if (this._touched) this.validate();
+      this._onChange();
+    }
+  }
+
 })();

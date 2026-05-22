@@ -48,10 +48,12 @@ const form = new FormCreator({
   },
 });
 
-// Display values on change
+// Display values and validation on change
 const $output = document.getElementById('output');
 const update = () => {
-  $output.textContent = JSON.stringify(form.getValues(), null, 2);
+  const values = form.getValues();
+  const result = form.validate();
+  $output.textContent = JSON.stringify({ values, errors: result.errors }, null, 2);
 };
 form.onChange(update);
 update();

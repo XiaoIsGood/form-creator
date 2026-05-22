@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FormCreator Demo (JSON)</title>
+    <style>
+      body {
+        max-width: 720px;
+        margin: 40px auto;
+        padding: 0 20px;
+        font-family: system-ui, sans-serif;
+      }
+      h1 {
+        margin-bottom: 24px;
+      }
+      .form-creator {
+        max-width: 400px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>FormCreator Demo <small>(JSON加载)</small></h1>
+    <div id="form" class="form-creator"></div>
+
+    <pre
+      id="output"
+      style="
+        margin-top: 24px;
+        padding: 16px;
+        background: #f5f5f5;
+        border-radius: 6px;
+        font-size: 13px;
+      "
+    ></pre>
+
+    <script src="form-creator.js"></script>
+    <script>
+      // 命名校验器 — 对应 JSON 中 validator 字段的值
+      const validators = {
+        notAdmin: (v) => v !== 'admin',
+        mustAgree: (v) => v === true,
+      };
+
+      // 从 JSON 文件加载 schema 配置
+      fetch('./schema-example.json')
+        .then((res) => res.json())
+        .then((schema) => {
+          const form = new FormCreator({
+            container: '#form',
+            schema: schema,
+            validators: validators,
+          });
+
+          const $output = document.getElementById('output');
+          const update = () => {
+            const values = form.getValues();
+            const result = form.validate();
+            $output.textContent = JSON.stringify(
+              { values, errors: result.errors },
+              null,
+              2,
+            );
+          };
+          form.onChange(update);
+          update();
+        });
+    </script>
+  </body>
+</html>

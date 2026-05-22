@@ -210,6 +210,7 @@
     rows: 4,
     maxlength: undefined,
     mode: undefined,       // 'column' for radio/checkbox vertical layout
+    displayValue: undefined, // display component — shown text ≠ actual value
   });
 
   function normalizeSchema(schema) {
@@ -363,15 +364,22 @@
     const { $el, $control, $error } = createFieldWrapper(field);
     const $display = document.createElement('div');
     $display.className = 'fc-input fc-display';
-    const val = field.defaultValue || '';
-    $display.textContent = val || field.placeholder || '';
-    if (!val) $display.classList.add('fc-display--placeholder');
+    let _displayValue = field.displayValue !== undefined ? field.displayValue : (field.defaultValue || '');
+    const text = field.defaultValue || '';
+    $display.textContent = text || field.placeholder || '';
+    if (!text) $display.classList.add('fc-display--placeholder');
     $control.appendChild($display);
     return {
       $el, $input: $display, $error,
-      getValue: () => $display.textContent,
+      getValue: () => _displayValue !== undefined ? _displayValue : $display.textContent,
       setValue: (v) => {
-        $display.textContent = v ?? '';
+        if (v && typeof v === 'object') {
+          $display.textContent = v.text ?? v.label ?? '';
+          _displayValue = v.value !== undefined ? v.value : v.text;
+        } else {
+          $display.textContent = v ?? '';
+          _displayValue = v ?? '';
+        }
         if ($display.textContent) $display.classList.remove('fc-display--placeholder');
         else $display.classList.add('fc-display--placeholder');
       }

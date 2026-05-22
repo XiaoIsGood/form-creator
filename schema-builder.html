@@ -103,9 +103,9 @@ const FIELD_TYPES = [
 const PRESETS = [
   { label: '姓名', type: 'text', name: '姓名', placeholder: '请输入姓名', maxlength: 20,
     rules: [{ required: true, message: '姓名不能为空' }] },
-  { label: '性别', type: 'select', name: '性别', placeholder: '请选择性别',
+  { label: '性别(下拉)', fieldLabel: '性别', type: 'select', name: '性别', placeholder: '请选择性别',
     options: ['男', '女'] },
-  { label: '性别', type: 'radio', name: '性别', mode: 'column',
+  { label: '性别(单选)', fieldLabel: '性别', type: 'radio', name: '性别', mode: 'column',
     options: ['男', '女'] },
   { label: '年龄', type: 'number', name: '年龄', min: 0, max: 200, step: 1,
     rules: [{ required: true, message: '年龄不能为空' }] },
@@ -301,7 +301,7 @@ function buildSchema() {
 let _idCounter = 0;
 function addPreset(idx) {
   const p = PRESETS[idx];
-  const base = { _id: 'preset_' + (_idCounter++), type: p.type, name: p.name, label: p.label, placeholder: p.placeholder || '', defaultValue: p.defaultValue || '', disabled: false, rules: JSON.parse(JSON.stringify(p.rules || [])) };
+  const base = { _id: 'preset_' + (_idCounter++), type: p.type, name: p.name, label: p.fieldLabel || p.label, placeholder: p.placeholder || '', defaultValue: p.defaultValue || '', disabled: false, rules: JSON.parse(JSON.stringify(p.rules || [])) };
   if (p.maxlength) base.maxlength = p.maxlength;
   if (p.min != null) base.min = p.min;
   if (p.max != null) base.max = p.max;

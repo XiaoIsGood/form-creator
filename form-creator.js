@@ -226,6 +226,20 @@
     try { return fn(value); } catch (e) { return false; }
   }
 
+  // Convert custom rule to function — accepts both Function and String
+  function resolveCustom(custom) {
+    if (typeof custom === 'function') return custom;
+    if (typeof custom === 'string') {
+      try {
+        if (custom.includes('=>')) {
+          return new Function('return ' + custom)();
+        }
+        return new Function('v', 'return (' + custom + ')');
+      } catch (e) { return null; }
+    }
+    return null;
+  }
+
   function validateField(value, rules, validators) {
     if (!rules || rules.length === 0) return [];
 
@@ -273,9 +287,10 @@
         }
       }
 
-      // custom function (JS object only, not JSON-safe)
-      if (rule.custom && typeof rule.custom === 'function') {
-        if (!safeCall(rule.custom, value)) {
+      // custom — function (JS object) or string expression (JSON-safe)
+      if (rule.custom != null) {
+        const fn = resolveCustom(rule.custom);
+        if (fn && !safeCall(fn, value)) {
           errors.push(rule.message || '校验失败');
         }
       }

@@ -118,6 +118,12 @@
   width: 16px !important; height: 16px !important; accent-color: var(--fc-primary-color) !important; cursor: pointer !important;
 }
 
+.form-creator .fc-radio-group--column,
+.form-creator .fc-checkbox-group--column {
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
 /* Select */
 .form-creator .fc-select-wrap { position: relative !important; }
 .form-creator .fc-select-wrap select {
@@ -189,6 +195,7 @@
     multiple: false,
     rows: 4,
     maxlength: undefined,
+    mode: undefined,       // 'column' for radio/checkbox vertical layout
   });
 
   function normalizeSchema(schema) {
@@ -406,6 +413,7 @@
     const { $el, $control, $error } = createFieldWrapper(field);
     const $group = document.createElement('div');
     $group.className = 'fc-radio-group';
+    if (field.mode === 'column') $group.classList.add('fc-radio-group--column');
     const $radios = [];
     field.options.forEach(opt => {
       const val = typeof opt === 'string' ? opt : opt.value;
@@ -441,6 +449,7 @@
     const { $el, $control, $error } = createFieldWrapper(field);
     const $group = document.createElement('div');
     $group.className = 'fc-checkbox-group';
+    if (field.mode === 'column') $group.classList.add('fc-checkbox-group--column');
     const defVals = Array.isArray(field.defaultValue) ? field.defaultValue : [];
     const $checkboxes = [];
     field.options.forEach(opt => {

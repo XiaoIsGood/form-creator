@@ -527,4 +527,26 @@ input[type="color"].fc-input {
     };
   }
 
+  function renderSwitch(field, onChange) {
+    const { $el, $control, $error } = createFieldWrapper(field);
+    const $switch = document.createElement('label');
+    $switch.className = 'fc-switch';
+    const $input = document.createElement('input');
+    $input.type = 'checkbox';
+    $input.name = field.name;
+    $input.checked = !!field.defaultValue;
+    if (field.disabled) $input.disabled = true;
+    const $slider = document.createElement('span');
+    $slider.className = 'fc-switch__slider';
+    $switch.appendChild($input);
+    $switch.appendChild($slider);
+    $control.appendChild($switch);
+    $input.addEventListener('change', onChange);
+    return {
+      $el, $input, $error,
+      getValue: () => $input.checked,
+      setValue: (v) => { $input.checked = !!v; }
+    };
+  }
+
 })();

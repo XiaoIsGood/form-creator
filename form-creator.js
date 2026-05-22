@@ -341,4 +341,111 @@ input[type="color"].fc-input {
     return { $el, $input: $textarea, $error, getValue: () => $textarea.value, setValue: (v) => { $textarea.value = v ?? ''; } };
   }
 
+  function renderSelect(field, onChange) {
+    const { $el, $control, $error } = createFieldWrapper(field);
+    const $wrap = document.createElement('div');
+    $wrap.className = 'fc-select-wrap';
+    const $select = document.createElement('select');
+    $select.name = field.name;
+    $select.className = 'fc-input';
+    if (field.disabled) $select.disabled = true;
+    if (field.multiple) $select.multiple = true;
+    field.options.forEach(opt => {
+      const $option = document.createElement('option');
+      if (typeof opt === 'string') {
+        $option.value = opt;
+        $option.textContent = opt;
+      } else {
+        $option.value = opt.value;
+        $option.textContent = opt.label || opt.value;
+      }
+      if ($option.value === String(field.defaultValue)) $option.selected = true;
+      $select.appendChild($option);
+    });
+    $wrap.appendChild($select);
+    $control.appendChild($wrap);
+    $select.addEventListener('change', onChange);
+    return {
+      $el, $input: $select, $error,
+      getValue: () => field.multiple
+        ? Array.from($select.selectedOptions).map(o => o.value)
+        : $select.value,
+      setValue: (v) => {
+        if (field.multiple && Array.isArray(v)) {
+          Array.from($select.options).forEach(o => { o.selected = v.includes(o.value); });
+        } else {
+          $select.value = v ?? '';
+        }
+      }
+    };
+  }
+
+  function renderRadio(field, onChange) {
+    const { $el, $control, $error } = createFieldWrapper(field);
+    const $group = document.createElement('div');
+    $group.className = 'fc-radio-group';
+    const $radios = [];
+    field.options.forEach(opt => {
+      const val = typeof opt === 'string' ? opt : opt.value;
+      const labelText = typeof opt === 'string' ? opt : (opt.label || opt.value);
+      const $wrapper = document.createElement('label');
+      $wrapper.className = 'fc-radio';
+      const $radio = document.createElement('input');
+      $radio.type = 'radio';
+      $radio.name = field.name;
+      $radio.value = val;
+      if (field.disabled) $radio.disabled = true;
+      if (val === String(field.defaultValue)) $radio.checked = true;
+      $wrapper.appendChild($radio);
+      $wrapper.appendChild(document.createTextNode(labelText));
+      $group.appendChild($wrapper);
+      $radios.push($radio);
+      $radio.addEventListener('change', onChange);
+    });
+    $control.appendChild($group);
+    return {
+      $el, $input: $radios[0], $error,
+      getValue: () => {
+        const checked = $group.querySelector('input:checked');
+        return checked ? checked.value : '';
+      },
+      setValue: (v) => {
+        $radios.forEach(r => { r.checked = r.value === String(v); });
+      }
+    };
+  }
+
+  function renderCheckbox(field, onChange) {
+    const { $el, $control, $error } = createFieldWrapper(field);
+    const $group = document.createElement('div');
+    $group.className = 'fc-checkbox-group';
+    const defVals = Array.isArray(field.defaultValue) ? field.defaultValue : [];
+    const $checkboxes = [];
+    field.options.forEach(opt => {
+      const val = typeof opt === 'string' ? opt : opt.value;
+      const labelText = typeof opt === 'string' ? opt : (opt.label || opt.value);
+      const $wrapper = document.createElement('label');
+      $wrapper.className = 'fc-checkbox';
+      const $cb = document.createElement('input');
+      $cb.type = 'checkbox';
+      $cb.value = val;
+      if (field.disabled) $cb.disabled = true;
+      if (defVals.includes(val)) $cb.checked = true;
+      $wrapper.appendChild($cb);
+      $wrapper.appendChild(document.createTextNode(labelText));
+      $group.appendChild($wrapper);
+      $checkboxes.push($cb);
+      $cb.addEventListener('change', onChange);
+    });
+    $control.appendChild($group);
+    return {
+      $el, $input: $checkboxes[0], $error,
+      getValue: () => $checkboxes.filter(cb => cb.checked).map(cb => cb.value),
+      setValue: (v) => {
+        const vals = Array.isArray(v) ? v : [];
+        $checkboxes.forEach(cb => { cb.checked = vals.includes(cb.value); });
+      }
+    };
+  }
+
 })();

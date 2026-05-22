@@ -448,4 +448,53 @@ input[type="color"].fc-input {
     };
   }
 
+  function renderDate(field, onChange) {
+    const { $el, $control, $error } = createFieldWrapper(field);
+    const $input = createInput(field, 'date');
+    $input.value = field.defaultValue || '';
+    $control.appendChild($input);
+    $input.addEventListener('change', onChange);
+    $input.addEventListener('blur', onChange);
+    return { $el, $input, $error, getValue: () => $input.value, setValue: (v) => { $input.value = v ?? ''; } };
+  }
+
+  function renderTime(field, onChange) {
+    const { $el, $control, $error } = createFieldWrapper(field);
+    const $input = createInput(field, 'time');
+    $input.value = field.defaultValue || '';
+    $control.appendChild($input);
+    $input.addEventListener('change', onChange);
+    $input.addEventListener('blur', onChange);
+    return { $el, $input, $error, getValue: () => $input.value, setValue: (v) => { $input.value = v ?? ''; } };
+  }
+
+  function renderColor(field, onChange) {
+    const { $el, $control, $error } = createFieldWrapper(field);
+    const $input = createInput(field, 'color');
+    $input.value = field.defaultValue || '#000000';
+    $input.classList.add('fc-input--color');
+    $control.appendChild($input);
+    $input.addEventListener('input', onChange);
+    $input.addEventListener('change', onChange);
+    return { $el, $input, $error, getValue: () => $input.value, setValue: (v) => { $input.value = v ?? '#000000'; } };
+  }
+
+  function renderFile(field, onChange) {
+    const { $el, $control, $error } = createFieldWrapper(field);
+    const $input = document.createElement('input');
+    $input.type = 'file';
+    $input.name = field.name;
+    $input.className = 'fc-file-input';
+    if (field.accept) $input.accept = field.accept;
+    if (field.multiple) $input.multiple = true;
+    if (field.disabled) $input.disabled = true;
+    $control.appendChild($input);
+    $input.addEventListener('change', onChange);
+    return {
+      $el, $input, $error,
+      getValue: () => field.multiple ? Array.from($input.files) : ($input.files[0] || null),
+      setValue: () => { /* file inputs cannot be set programmatically */ }
+    };
+  }
+
 })();

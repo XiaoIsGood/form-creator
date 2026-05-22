@@ -713,6 +713,32 @@ input[type="color"].fc-input {
         if (config) field.setValue(config.defaultValue);
       });
     }
+
+    onChange(fn) {
+      if (typeof fn !== 'function') return;
+      this._listeners.push(fn);
+      return () => {
+        const idx = this._listeners.indexOf(fn);
+        if (idx !== -1) this._listeners.splice(idx, 1);
+      };
+    }
+
+    destroy() {
+      this._listeners = [];
+      this._fields.forEach(field => {
+        field.$el.remove();
+      });
+      this._fields.clear();
+      this._$container.innerHTML = '';
+      this._$container.classList.remove('form-creator');
+    }
+  }
+
+  // ========== Export ==========
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = FormCreator;
+  } else {
+    window.FormCreator = FormCreator;
   }
 
 })();

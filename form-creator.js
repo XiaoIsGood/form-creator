@@ -132,6 +132,10 @@
   background: var(--fc-input-bg) !important; border: 1px solid var(--fc-input-border) !important;
   border-radius: var(--fc-input-radius) !important; outline: none !important; box-sizing: border-box !important;
   appearance: none !important; cursor: pointer !important;
+  color: #333 !important;
+}
+.form-creator .fc-select--placeholder {
+  color: #999 !important;
 }
 .form-creator .fc-select-wrap select:focus {
   border-color: var(--fc-input-focus-border) !important;
@@ -398,6 +402,7 @@
       const $ph = document.createElement('option');
       $ph.value = '';
       $ph.textContent = field.placeholder || '请选择';
+      $ph.className = 'fc-select-placeholder';
       $select.appendChild($ph);
     }
     field.options.forEach(opt => {
@@ -412,10 +417,18 @@
       if ($option.value === String(field.defaultValue)) $option.selected = true;
       $select.appendChild($option);
     });
-    if (!field.multiple && !hasDefault) $select.value = '';
+    if (!field.multiple && !hasDefault) {
+      $select.value = '';
+      $select.classList.add('fc-select--placeholder');
+    }
     $wrap.appendChild($select);
     $control.appendChild($wrap);
-    $select.addEventListener('change', onChange);
+    $select.addEventListener('change', () => {
+      if (!field.multiple && !hasDefault) {
+        $select.classList.toggle('fc-select--placeholder', $select.value === '');
+      }
+      onChange();
+    });
     return {
       $el, $input: $select, $error,
       getValue: () => field.multiple

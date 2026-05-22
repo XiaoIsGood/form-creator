@@ -113,6 +113,14 @@ const PRESETS = [
     label: '🆔 身份证号', type: 'text', name: 'idCard', placeholder: '请输入身份证号', maxlength: 18,
     rules: [{ required: true, message: '身份证号不能为空' }, { pattern: '^\\d{17}[\\dXx]$', message: '请填写正确的身份证号' }],
   },
+  { label: '👤 姓名', type: 'text', name: 'name', placeholder: '请输入姓名', maxlength: 20,
+    rules: [{ required: true, message: '姓名不能为空' }] },
+  { label: '🏢 单位', type: 'text', name: 'company', placeholder: '请输入单位名称', maxlength: 50,
+    rules: [{ required: true, message: '单位不能为空' }] },
+  { label: '💼 职务', type: 'text', name: 'position', placeholder: '请输入职务', maxlength: 30 },
+  { label: '⚧ 性别', type: 'select', name: 'gender', placeholder: '请选择性别',
+    options: ['男', '女'] },
+  { label: '🎂 年龄', type: 'number', name: 'age', min: 1, max: 150, defaultValue: 18 },
 ];
 
 const OPTION_TYPES = ['select', 'radio', 'checkbox'];
@@ -314,7 +322,17 @@ function addField(type) {
 
 function removeField(idx) { fields.splice(idx, 1); render(); }
 function moveField(idx, dir) { const t = idx + dir; if (t < 0 || t >= fields.length) return; [fields[idx], fields[t]] = [fields[t], fields[idx]]; render(); }
-function updateField(idx, key, val) { fields[idx][key] = val; render(); }
+function updateField(idx, key, val) {
+  fields[idx][key] = val;
+  if (key === 'label' && fields[idx].rules) {
+    fields[idx].rules.forEach(r => {
+      if (r.required && (r.message === '此项必填' || r.message.endsWith('不能为空'))) {
+        r.message = val ? `${val}不能为空` : '此项必填';
+      }
+    });
+  }
+  render();
+}
 function fixValue(idx, val) {
   const f = fields[idx];
   if (f.type === 'number') return val === '' ? '' : Number(val);
@@ -339,13 +357,21 @@ function updateOptLabel(idx, oi, val) {
 }
 
 // Rules
-function addRule(idx) { if (!fields[idx].rules) fields[idx].rules = []; fields[idx].rules.push({ required: true, message: '此项必填' }); render(); }
+function addRule(idx) {
+  if (!fields[idx].rules) fields[idx].rules = [];
+  const label = fields[idx].label;
+  const msg = label ? `${label}不能为空` : '此项必填';
+  fields[idx].rules.push({ required: true, message: msg });
+  render();
+}
 function removeRule(idx, ri) { fields[idx].rules.splice(ri, 1); render(); }
 function updateRule(idx, ri, key, val) {
   const rule = fields[idx].rules[ri];
   // Clear other rule types when switching
   if (key === 'type') {
-    fields[idx].rules[ri] = { message: rule.message || '' };
+    const label = fields[idx].label;
+    const defMsg = val === 'required' ? (label ? `${label}不能为空` : '此项必填') : (rule.message || '');
+    fields[idx].rules[ri] = { message: defMsg };
     if (val === 'required') fields[idx].rules[ri].required = true;
     else if (val === 'pattern') fields[idx].rules[ri].pattern = '';
     else if (val === 'min') fields[idx].rules[ri].min = 0;

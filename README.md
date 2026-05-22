@@ -185,6 +185,92 @@ const form = new FormCreator({
 });
 ```
 
+## JSON 配置用法
+
+Schema 可存为纯 JSON 文件或数据库字段，通过 `fetch` 远程加载。`custom` 用字符串表达式，无需额外映射。
+
+### 从 JSON 加载
+
+```html
+<script src="form-creator.js"></script>
+<script>
+  fetch('/api/schema.json')
+    .then(res => res.json())
+    .then(schema => {
+      const form = new FormCreator({
+        container: '#form',
+        schema: schema,
+      });
+      // ...
+    });
+</script>
+```
+
+### JSON Schema 示例
+
+```json
+[
+  {
+    "type": "text",
+    "name": "username",
+    "label": "用户名",
+    "placeholder": "请输入用户名",
+    "maxlength": 20,
+    "rules": [
+      { "required": true, "message": "用户名不能为空" },
+      { "min": 3, "message": "至少3个字符" },
+      { "custom": "v !== 'admin'", "message": "该用户名不可用" }
+    ]
+  },
+  {
+    "type": "text",
+    "name": "phone",
+    "label": "手机号",
+    "maxlength": 11,
+    "rules": [
+      { "required": true, "message": "手机号不能为空" },
+      { "pattern": "^1[3-9]\\d{9}$", "message": "手机号格式不正确" }
+    ]
+  },
+  {
+    "type": "switch",
+    "name": "agree",
+    "label": "同意用户协议",
+    "defaultValue": false,
+    "rules": [
+      { "custom": "v === true", "message": "请同意用户协议" }
+    ]
+  },
+  {
+    "type": "select",
+    "name": "city",
+    "label": "城市",
+    "options": ["北京", "上海", "广州", "深圳"],
+    "defaultValue": "北京"
+  },
+  {
+    "type": "radio",
+    "name": "gender",
+    "label": "性别",
+    "mode": "column",
+    "options": [
+      { "value": "male", "label": "男" },
+      { "value": "female", "label": "女" }
+    ],
+    "defaultValue": "male"
+  }
+]
+```
+
+### JSON 中 custom 的写法
+
+| 写法 | 示例 | 说明 |
+|------|------|------|
+| 表达式 | `"v !== 'admin'"` | 自动包装为 `v => 表达式`，推荐 |
+| 箭头函数 | `"v => v === true"` | 完整函数体，适合复杂逻辑 |
+
+> **引号注意**：JSON 字符串内的引号需转义 `\"`，或改用单引号 `'`，如 `"v !== 'admin'"`。
+
 ## API 参考
 
 ### new FormCreator(options)

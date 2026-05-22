@@ -420,16 +420,19 @@ new FormCreator({ container:'#form', schema:${JSON.stringify(schema)} });
 }
 
 function jsonPreviewHtml() {
-  const json = JSON.stringify(buildSchema(), null, 2);
+  const json = JSON.stringify(buildSchema());
   const base = location.href.replace(/\/[^/]*$/, '/');
+  // Use <script type="application/json"> to avoid escaping hell
   return `<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><title>Preview JSON</title>
 <style>body{max-width:500px;margin:40px auto;padding:0 20px;font-family:system-ui,sans-serif}</style></head><body>
 <div id="form" class="form-creator"></div>
 <script src="${base}form-creator.js"><\/script>
+<script type="application/json" id="schema-data">
+${json}
+<\/script>
 <script>
-fetch('data:application/json,'+encodeURIComponent('${json.replace(/'/g, "\\'")}')).then(r=>r.json()).then(schema=>{
-  new FormCreator({ container:'#form', schema:schema });
-});
+var schema = JSON.parse(document.getElementById('schema-data').textContent);
+new FormCreator({ container:'#form', schema:schema });
 <\/script></body></html>`;
 }
 

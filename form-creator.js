@@ -159,7 +159,9 @@
 .form-creator .fc-slider__value { min-width: 36px !important; text-align: right !important; font-size: var(--fc-font-size) !important; color: var(--fc-label-color) !important; }
 
 /* File */
+.form-creator .fc-file-wrap { display: flex !important; align-items: center !important; gap: 10px !important; }
 .form-creator .fc-file-input { font-size: var(--fc-font-size) !important; }
+.form-creator .fc-file-hint { font-size: var(--fc-font-size) !important; color: #999 !important; }
 .form-creator .fc-file-input::-webkit-file-upload-button {
   background: var(--fc-primary-color) !important; color: #fff !important; border: none !important;
   padding: 6px 16px !important; border-radius: var(--fc-input-radius) !important; cursor: pointer !important;
@@ -562,6 +564,8 @@
 
   function renderFile(field, onChange) {
     const { $el, $control, $error } = createFieldWrapper(field);
+    const $wrap = document.createElement('div');
+    $wrap.className = 'fc-file-wrap';
     const $input = document.createElement('input');
     $input.type = 'file';
     $input.name = field.name;
@@ -569,8 +573,22 @@
     if (field.accept) $input.accept = field.accept;
     if (field.multiple) $input.multiple = true;
     if (field.disabled) $input.disabled = true;
-    $control.appendChild($input);
-    $input.addEventListener('change', onChange);
+    const $hint = document.createElement('span');
+    $hint.className = 'fc-file-hint';
+    $hint.textContent = field.placeholder || '点击选择文件';
+    $wrap.appendChild($input);
+    $wrap.appendChild($hint);
+    $control.appendChild($wrap);
+    $input.addEventListener('change', () => {
+      if ($input.files && $input.files.length) {
+        $hint.textContent = field.multiple
+          ? `已选 ${$input.files.length} 个文件`
+          : $input.files[0].name;
+      } else {
+        $hint.textContent = field.placeholder || '点击选择文件';
+      }
+      onChange();
+    });
     return {
       $el, $input, $error,
       getValue: () => field.multiple ? Array.from($input.files) : ($input.files[0] || null),

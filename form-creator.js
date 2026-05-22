@@ -72,6 +72,12 @@
   cursor: not-allowed !important;
 }
 
+.form-creator .fc-display {
+  background: #f9fafb !important; min-height: 38px !important;
+  display: flex !important; align-items: center !important;
+  color: #333 !important; user-select: none !important;
+}
+
 .form-creator .fc-field--error .fc-input,
 .form-creator .fc-field--error .fc-switch__slider,
 .form-creator .fc-field--error .fc-select-wrap select {
@@ -349,6 +355,15 @@
     return { $el, $input, $error, getValue: () => $input.value, setValue: (v) => { $input.value = v ?? ''; } };
   }
 
+  function renderDisplay(field, onChange) {
+    const { $el, $control, $error } = createFieldWrapper(field);
+    const $display = document.createElement('div');
+    $display.className = 'fc-input fc-display';
+    $display.textContent = field.defaultValue || '';
+    $control.appendChild($display);
+    return { $el, $input: $display, $error, getValue: () => $display.textContent, setValue: (v) => { $display.textContent = v ?? ''; } };
+  }
+
   function renderPassword(field, onChange) {
     const { $el, $control, $error } = createFieldWrapper(field);
     const $input = createInput(field, 'password');
@@ -618,6 +633,7 @@
   // ========== Component Registry ==========
   const COMPONENT_MAP = Object.freeze({
     text: renderText,
+    display: renderDisplay,
     password: renderPassword,
     number: renderNumber,
     textarea: renderTextarea,

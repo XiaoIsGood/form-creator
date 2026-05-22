@@ -616,4 +616,67 @@ input[type="color"].fc-input {
     }
   }
 
+
+  // ========== FormCreator Class ==========
+  class FormCreator {
+    constructor(options = {}) {
+      this._options = options;
+      this._validators = options.validators || {};
+      this._layout = options.layout || 'vertical';
+      this._listeners = [];
+
+      // Resolve container
+      const container = options.container;
+      if (typeof container === 'string') {
+        this._$container = document.querySelector(container);
+        if (!this._$container) throw new Error(`Container not found: "${container}"`);
+      } else if (container instanceof HTMLElement) {
+        this._$container = container;
+      } else {
+        throw new Error('Container must be a CSS selector string or DOM element');
+      }
+      this._$container.classList.add('form-creator');
+
+      // Inject styles once
+      injectStyles();
+
+      // Parse and render
+      this._schema = normalizeSchema(options.schema || []);
+      this._fields = new Map();
+      this._render();
+    }
+
+    _render() {
+      this._$container.innerHTML = '';
+      this._fields.clear();
+
+      this._schema.forEach(fieldConfig => {
+        const field = new FormField(
+          fieldConfig,
+          () => this._notify(fieldConfig.name),
+          this._validators
+        );
+
+        // Apply layout class
+        if (this._layout && this._layout !== 'vertical') {
+          field.$el.classList.add(`fc-field--${this._layout}`);
+        }
+
+        this._$container.appendChild(field.$el);
+        this._fields.set(fieldConfig.name, field);
+      });
+    }
+
+    getField(name) {
+      return this._fields.get(name) || null;
+    }
+
+    _notify(name) {
+      const values = this.getValues();
+      this._listeners.forEach(fn => {
+        try { fn(values, name); } catch (e) { /* silent */ }
+      });
+    }
+  }
+
 })();

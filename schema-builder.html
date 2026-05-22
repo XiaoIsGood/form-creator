@@ -170,6 +170,10 @@ function renderFieldCards() {
     return `
       <div class="field-card">
         <div class="field-card-header">
+          <div style="display:flex;align-items:center;gap:4px">
+            <button onclick="moveField(${idx},-1)" title="上移" ${idx===0?'disabled':''} style="font-size:12px;color:#999">▲</button>
+            <button onclick="moveField(${idx},1)" title="下移" ${idx===fields.length-1?'disabled':''} style="font-size:12px;color:#999">▼</button>
+          </div>
           <span class="name">${f.label || '未命名字段'}</span>
           <span class="type">${ft.icon} ${ft.label}</span>
           <button onclick="removeField(${idx})" title="删除">×</button>
@@ -276,6 +280,7 @@ function addField(type) {
 }
 
 function removeField(idx) { fields.splice(idx, 1); render(); }
+function moveField(idx, dir) { const t = idx + dir; if (t < 0 || t >= fields.length) return; [fields[idx], fields[t]] = [fields[t], fields[idx]]; render(); }
 function updateField(idx, key, val) { fields[idx][key] = val; render(); }
 function fixValue(idx, val) {
   const f = fields[idx];

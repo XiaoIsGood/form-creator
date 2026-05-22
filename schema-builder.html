@@ -60,8 +60,21 @@ body { font-family: system-ui, sans-serif; background: #f0f2f5; min-height: 100v
     <div class="field-types" id="fieldTypes"></div>
     <h3 style="margin-top:16px">常用预设</h3>
     <div class="field-types" id="presets"></div>
+    <button class="ft-btn" style="width:100%;margin-top:12px;border-color:#4a90d9;color:#4a90d9" onclick="showImport()">📥 导入 JSON</button>
     <div style="margin-top:12px;font-size:12px;color:#999;">
       点击组件添加到表单，然后在右侧配置属性
+    </div>
+  </div>
+
+  <!-- 导入弹窗 -->
+  <div id="importOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:999;justify-content:center;align-items:center">
+    <div style="background:#fff;border-radius:8px;padding:24px;width:600px;max-height:80vh;display:flex;flex-direction:column;gap:12px">
+      <h3 style="margin:0">导入 JSON Schema</h3>
+      <textarea id="importText" style="flex:1;min-height:300px;padding:12px;border:1px solid #d9d9d9;border-radius:6px;font-family:monospace;font-size:13px;resize:vertical" placeholder="粘贴 JSON schema..."></textarea>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="ft-btn" onclick="hideImport()">取消</button>
+        <button class="ft-btn" style="background:#4a90d9;color:#fff;border-color:#4a90d9" onclick="doImport()">导入</button>
+      </div>
     </div>
   </div>
 
@@ -394,6 +407,39 @@ function updateRule(idx, ri, key, val) {
 function copyOutput() {
   navigator.clipboard.writeText(JSON.stringify(buildSchema(), null, 2));
   alert('已复制到剪贴板');
+}
+
+function showImport() {
+  document.getElementById('importOverlay').style.display = 'flex';
+  document.getElementById('importText').focus();
+}
+function hideImport() {
+  document.getElementById('importOverlay').style.display = 'none';
+}
+function doImport() {
+  try {
+    const arr = JSON.parse(document.getElementById('importText').value);
+    if (!Array.isArray(arr)) { alert('Schema 必须是数组格式'); return; }
+    fields.length = 0;
+    arr.forEach((f, i) => {
+      if (!f.type || !f.name) { alert(`第 ${i+1} 个字段缺少 type 或 name`); return; }
+      const base = { _id: 'import_' + (_idCounter++), type: f.type, name: f.name, label: f.label || '', placeholder: f.placeholder || '', defaultValue: f.defaultValue != null ? f.defaultValue : '', disabled: !!f.disabled, rules: (f.rules || []).map(r => ({...r})) };
+      if (f.min != null) base.min = f.min;
+      if (f.max != null) base.max = f.max;
+      if (f.step != null) base.step = f.step;
+      if (f.options) base.options = f.options.map(o => typeof o === 'string' ? o : {...o});
+      if (f.rows) base.rows = f.rows;
+      if (f.maxlength) base.maxlength = f.maxlength;
+      if (f.accept) base.accept = f.accept;
+      if (f.multiple) base.multiple = f.multiple;
+      if (f.mode) base.mode = f.mode;
+      fields.push(base);
+    });
+    hideImport();
+    render();
+  } catch (e) {
+    alert('JSON 解析失败: ' + e.message);
+  }
 }
 
 function singlePreview() {

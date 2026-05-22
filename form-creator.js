@@ -640,7 +640,7 @@
 
   // ========== FormField Class ==========
   class FormField {
-    constructor(fieldConfig, onChange, validators, validateOnBlur) {
+    constructor(fieldConfig, onChange, validators, validateOnBlur, onFieldClick) {
       this.config = fieldConfig;
       this._onChange = onChange;
       this._validators = validators;
@@ -653,6 +653,15 @@
       this._component = component;
       this._touched = false;
       this._errors = [];
+
+      // Attach field click handler
+      if (onFieldClick) {
+        this.$el.addEventListener('click', (e) => {
+          // Don't fire when clicking actual interactive controls
+          if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'LABEL') return;
+          onFieldClick({ name: fieldConfig.name, field: this, setValue: (v) => this.setValue(v) });
+        });
+      }
     }
 
     getValue() {
@@ -694,6 +703,7 @@
       this._validators = options.validators || {};
       this._layout = options.layout || 'vertical';
       this._validateOnBlur = options.validateOnBlur !== false;
+      this._onFieldClick = options.onFieldClick || null;
       this._listeners = [];
 
       // Resolve container
@@ -726,7 +736,8 @@
           fieldConfig,
           () => this._notify(fieldConfig.name),
           this._validators,
-          this._validateOnBlur
+          this._validateOnBlur,
+          this._onFieldClick
         );
 
         // Apply layout class

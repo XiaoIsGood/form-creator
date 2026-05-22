@@ -62,6 +62,21 @@ const unsub = form.onChange((values, changedField) => {
 unsub();
 ```
 
+### 字段点击（含禁用字段）
+
+```js
+const form = new FormCreator({
+  container: '#form',
+  schema: [
+    { type: 'display', name: 'dept', label: '部门', disabled: true, placeholder: '点击选择部门' },
+  ],
+  onFieldClick: ({ name, field, setValue }) => {
+    // 打开选择器，回填数据
+    openPicker().then(result => setValue(result));
+  },
+});
+```
+
 ### 重置
 
 ```js
@@ -94,6 +109,7 @@ form.destroy();  // 移除 DOM、清理事件
   rows: 4,                   // textarea 的行数
   maxlength: 20,              // text/password/textarea 最大字符数
   mode: 'column',             // radio/checkbox 竖排（每行一个选项）
+  displayValue: '',           // display 组件实际取值（与显示文本可不同）
   // 校验规则 — 纯 JSON 可序列化
   rules: [],
 }
@@ -104,6 +120,7 @@ form.destroy();  // 移除 DOM、清理事件
 | type       | 说明     | 特有属性                          |
 |------------|---------|----------------------------------|
 | text       | 文本输入  | maxlength                        |
+| display    | 文本展示  | displayValue（显示≠取值）          |
 | password   | 密码输入  | maxlength                        |
 | number     | 数字输入  | min, max, step                   |
 | textarea   | 多行文本  | rows, maxlength                  |
@@ -281,6 +298,7 @@ Schema 可存为纯 JSON 文件或数据库字段，通过 `fetch` 远程加载�
 | schema | Array | 是 | 字段配置数组 |
 | layout | String | 否 | vertical（默认）/ horizontal / inline |
 | validateOnBlur | Boolean | 否 | 输入/失焦时是否校验，默认 true |
+| onFieldClick | Function | 否 | 点击字段时回调，禁用字段也可触发 |
 | validators | Object | 否 | 命名校验器映射 |
 
 ### 实例方法

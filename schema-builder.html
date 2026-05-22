@@ -61,6 +61,7 @@ body { font-family: system-ui, sans-serif; background: #f0f2f5; min-height: 100v
     <h3 style="margin-top:16px">常用预设</h3>
     <div class="field-types" id="presets"></div>
     <button class="ft-btn" style="width:100%;margin-top:12px;border-color:#4a90d9;color:#4a90d9" onclick="showImport()">📥 导入 JSON</button>
+    <button class="ft-btn" style="width:100%;margin-top:4px;border-color:#e74c3c;color:#e74c3c" onclick="clearAll()">🗑 一键清空</button>
     <div style="margin-top:12px;font-size:12px;color:#999;">
       点击组件添加到表单，然后在右侧配置属性
     </div>
@@ -344,6 +345,7 @@ function addField(type) {
 
 function removeField(idx) { fields.splice(idx, 1); render(); }
 function moveField(idx, dir) { const t = idx + dir; if (t < 0 || t >= fields.length) return; [fields[idx], fields[t]] = [fields[t], fields[idx]]; render(); }
+function clearAll() { if (fields.length === 0) return; if (confirm('确定清空所有字段？')) { fields.length = 0; render(); } }
 function updateField(idx, key, val) {
   fields[idx][key] = val;
   if (key === 'label' && fields[idx].rules) {

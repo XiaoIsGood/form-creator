@@ -215,8 +215,7 @@
 
   function isValueEmpty(value) {
     return value == null || value === '' ||
-      (Array.isArray(value) && value.length === 0) ||
-      (typeof value === 'boolean' && value === false);
+      (Array.isArray(value) && value.length === 0);
   }
 
   function safeRegex(pattern) {

@@ -188,6 +188,7 @@
     accept: undefined,
     multiple: false,
     rows: 4,
+    maxlength: undefined,
   });
 
   function normalizeSchema(schema) {
@@ -309,6 +310,7 @@
     $input.className = 'fc-input';
     if (field.placeholder) $input.placeholder = field.placeholder;
     if (field.disabled) $input.disabled = true;
+    if (field.maxlength != null) $input.maxLength = field.maxlength;
     return $input;
   }
 
@@ -354,6 +356,7 @@
     $textarea.value = field.defaultValue || '';
     if (field.placeholder) $textarea.placeholder = field.placeholder;
     if (field.disabled) $textarea.disabled = true;
+    if (field.maxlength != null) $textarea.maxLength = field.maxlength;
     $control.appendChild($textarea);
     $textarea.addEventListener('input', onChange);
     $textarea.addEventListener('blur', onChange);

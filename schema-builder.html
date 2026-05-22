@@ -326,6 +326,8 @@ function addPreset(idx) {
   if (p.step != null) base.step = p.step;
   if (p.options) base.options = [...p.options];
   if (p.mode) base.mode = p.mode;
+  if (p.accept) base.accept = p.accept;
+  if (p.multiple) base.multiple = p.multiple;
   fields.push(base);
   render();
 }

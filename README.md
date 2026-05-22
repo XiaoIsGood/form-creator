@@ -8,7 +8,7 @@
 - **JSON Schema 驱动** — 配置可存入数据库，远程下发
 - **13 种组件** — 文本、密码、数字、文本域、开关、下拉、单选、多选、日期、时间、文件、颜色、滑块
 - **CSS 完全隔离** — `all: initial` + `!important` + `.form-creator` 前缀，外部样式无法污染
-- **多项目共享校验器** — JSON 配置用字符串引用，JS 函数集中管理
+- **custom 支持字符串表达式** — JSON 中直接写校验逻辑，无需额外映射
 - **响应式布局** — vertical / horizontal / inline 三种排列
 - **CSS 变量主题** — 14 个变量控制所有样式
 
@@ -92,6 +92,8 @@ form.destroy();  // 移除 DOM、清理事件
   accept: '.jpg,.png',       // file 的文件类型过滤
   multiple: false,           // select / file 是否多选
   rows: 4,                   // textarea 的行数
+  maxlength: 20,              // text/password/textarea 最大字符数
+  mode: 'column',             // radio/checkbox 竖排（每行一个选项）
   // 校验规则 — 纯 JSON 可序列化
   rules: [],
 }
@@ -101,14 +103,14 @@ form.destroy();  // 移除 DOM、清理事件
 
 | type       | 说明     | 特有属性                          |
 |------------|---------|----------------------------------|
-| text       | 文本输入  | —                                |
-| password   | 密码输入  | —                                |
+| text       | 文本输入  | maxlength                        |
+| password   | 密码输入  | maxlength                        |
 | number     | 数字输入  | min, max, step                   |
-| textarea   | 多行文本  | rows                             |
+| textarea   | 多行文本  | rows, maxlength                  |
 | switch     | 开关     | —                                |
 | select     | 下拉选择  | options, multiple                |
-| radio      | 单选框组  | options                          |
-| checkbox   | 多选框组  | options                          |
+| radio      | 单选框组  | options, mode                    |
+| checkbox   | 多选框组  | options, mode                    |
 | date       | 日期选择  | —                                |
 | time       | 时间选择  | —                                |
 | color      | 颜色选择  | —                                |
@@ -133,11 +135,12 @@ options: [
 ```js
 rules: [
   { required: true, message: '此项必填' },
-  { pattern: '^[a-zA-Z0-9]+$', message: '只能输入字母和数字' },  // 正则字符串
+  { pattern: '^[a-zA-Z0-9]+$', message: '只能输入字母和数字' },
   { min: 6, message: '至少6个字符' },
   { max: 20, message: '最多20个字符' },
-  { validator: 'isUnique', message: '用户名已存在' },            // 命名校验器
-  { custom: v => v !== 'admin', message: '不可用' },            // JS 函数
+  { custom: "v !== 'admin'", message: '用户名不可用' },             // 字符串表达式
+  { custom: "v => v === true", message: '请同意协议' },            // 箭头函数字符串
+  { custom: v => v !== 'admin', message: '不可用' },              // JS 函数（仅 JS 对象）
 ]
 ```
 
@@ -149,54 +152,38 @@ rules: [
 | pattern   | String    | 正则匹配（JSON 安全）          |
 | min       | Number    | 最小值/最小长度               |
 | max       | Number    | 最大值/最大长度               |
-| validator | String    | 引用 validators 映射中的函数名  |
-| custom    | Function  | 直传函数（不可 JSON 序列化）    |
+| custom    | String \| Function | 字符串表达式或函数，支持三种写法 |
+| validator | String    | 引用 validators 映射中的函数名（可选，适合复杂/异步场景） |
 
-### 多项目共享校验器
-
-多个项目使用同一份 JS 校验函数，JSON Schema 只存字符串引用：
+### custom 三种写法
 
 ```js
-// 共享库 form-validators.js
-const sharedValidators = {
-  isUnique: async v => { /* 检查唯一性 */ },
-  isEmail: v => /^.+@.+\..+$/.test(v),
-  isPhone: v => /^1[3-9]\d{9}$/.test(v),
-  notReserved: v => !['admin', 'root', 'system'].includes(v),
-};
+// 1. 表达式字符串 — v 是当前值（JSON 安全，推荐）
+{ custom: "v !== 'admin'", message: '用户名不可用' }
 
-// 各项目的 JSON 配置（可存数据库）
-const schemaFromDB = [
-  {
-    type: 'text',
-    name: 'username',
-    label: '用户名',
-    rules: [
-      { required: true, message: '用户名不能为空' },
-      { validator: 'notReserved', message: '该用户名为系统保留' },
-      { validator: 'isUnique', message: '用户名已存在' },
-    ],
-  },
-  {
-    type: 'text',
-    name: 'email',
-    label: '邮箱',
-    rules: [
-      { required: true, message: '邮箱不能为空' },
-      { validator: 'isEmail', message: '邮箱格式不正确' },
-    ],
-  },
-];
+// 2. 箭头函数字符串（JSON 安全）
+{ custom: "v => v === true", message: '请同意协议' }
 
-// 使用
-const form = new FormCreator({
-  container: '#form',
-  schema: schemaFromDB,          // 来自数据库
-  validators: sharedValidators,  // 共享函数库
-});
+// 3. 直传函数（JS 对象专用）
+{ custom: v => v.length > 3, message: '长度不够' }
 ```
 
-一套 JS 函数，多份 JSON 配置，完全解耦。
+### validator 命名校验器（可选）
+
+适合复杂逻辑或异步校验，通过 `validators` 映射注入：
+
+```js
+const form = new FormCreator({
+  container: '#form',
+  schema: [
+    { type: 'text', name: 'username', label: '用户名',
+      rules: [{ validator: 'isUnique', message: '用户名已存在' }] },
+  ],
+  validators: {
+    isUnique: async v => { /* 异步检查唯一性 */ },
+  },
+});
+```
 
 ## API 参考
 

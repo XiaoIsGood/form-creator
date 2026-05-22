@@ -280,6 +280,7 @@ Schema 可存为纯 JSON 文件或数据库字段，通过 `fetch` 远程加载�
 | container | String \| HTMLElement | 是 | 容器元素或 CSS 选择器 |
 | schema | Array | 是 | 字段配置数组 |
 | layout | String | 否 | vertical（默认）/ horizontal / inline |
+| validateOnBlur | Boolean | 否 | 输入/失焦时是否校验，默认 true |
 | validators | Object | 否 | 命名校验器映射 |
 
 ### 实例方法

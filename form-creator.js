@@ -497,4 +497,34 @@ input[type="color"].fc-input {
     };
   }
 
+  function renderSlider(field, onChange) {
+    const { $el, $control, $error } = createFieldWrapper(field);
+    const $wrap = document.createElement('div');
+    $wrap.className = 'fc-slider-wrap';
+    const $input = document.createElement('input');
+    $input.type = 'range';
+    $input.name = field.name;
+    $input.className = 'fc-slider';
+    $input.min = field.min ?? 0;
+    $input.max = field.max ?? 100;
+    $input.step = field.step ?? 1;
+    $input.value = field.defaultValue ?? field.min ?? 0;
+    if (field.disabled) $input.disabled = true;
+    const $display = document.createElement('span');
+    $display.className = 'fc-slider__value';
+    $display.textContent = $input.value;
+    $wrap.appendChild($input);
+    $wrap.appendChild($display);
+    $control.appendChild($wrap);
+    $input.addEventListener('input', () => {
+      $display.textContent = $input.value;
+      onChange();
+    });
+    return {
+      $el, $input, $error,
+      getValue: () => Number($input.value),
+      setValue: (v) => { $input.value = v ?? field.min ?? 0; $display.textContent = $input.value; }
+    };
+  }
+
 })();

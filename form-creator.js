@@ -393,6 +393,13 @@
     $select.className = 'fc-input';
     if (field.disabled) $select.disabled = true;
     if (field.multiple) $select.multiple = true;
+    const hasDefault = field.defaultValue != null && field.defaultValue !== '';
+    if (!field.multiple && !hasDefault) {
+      const $ph = document.createElement('option');
+      $ph.value = '';
+      $ph.textContent = field.placeholder || '请选择';
+      $select.appendChild($ph);
+    }
     field.options.forEach(opt => {
       const $option = document.createElement('option');
       if (typeof opt === 'string') {
@@ -405,6 +412,7 @@
       if ($option.value === String(field.defaultValue)) $option.selected = true;
       $select.appendChild($option);
     });
+    if (!field.multiple && !hasDefault) $select.value = '';
     $wrap.appendChild($select);
     $control.appendChild($wrap);
     $select.addEventListener('change', onChange);

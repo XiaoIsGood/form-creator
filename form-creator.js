@@ -185,6 +185,21 @@ input[type="color"].fc-input {
   }
 
   // ========== Validation Engine ==========
+
+  function isValueEmpty(value) {
+    return value == null || value === '' ||
+      (Array.isArray(value) && value.length === 0) ||
+      (typeof value === 'boolean' && value === false);
+  }
+
+  function safeRegex(pattern) {
+    try { return new RegExp(pattern); } catch (e) { return null; }
+  }
+
+  function safeCall(fn, value) {
+    try { return fn(value); } catch (e) { return false; }
+  }
+
   function validateField(value, rules, validators) {
     if (!rules || rules.length === 0) return [];
 
@@ -192,23 +207,19 @@ input[type="color"].fc-input {
     for (const rule of rules) {
       // required check
       if (rule.required) {
-        const empty = value == null || value === '' ||
-          (Array.isArray(value) && value.length === 0) ||
-          (typeof value === 'boolean' && value === false);
-        if (empty) {
+        if (isValueEmpty(value)) {
           errors.push(rule.message || '此项必填');
           continue;
         }
       }
 
       // Skip other validations if value is empty and not required
-      const isEmpty = value == null || value === '' || (Array.isArray(value) && value.length === 0);
-      if (isEmpty) continue;
+      if (isValueEmpty(value)) continue;
 
       // pattern
       if (rule.pattern) {
-        const regex = new RegExp(rule.pattern);
-        if (!regex.test(String(value))) {
+        const regex = safeRegex(rule.pattern);
+        if (!regex || !regex.test(String(value))) {
           errors.push(rule.message || '格式不正确');
         }
       }
@@ -231,14 +242,14 @@ input[type="color"].fc-input {
 
       // named validator from validators map
       if (rule.validator && validators && typeof validators[rule.validator] === 'function') {
-        if (!validators[rule.validator](value)) {
+        if (!safeCall(validators[rule.validator], value)) {
           errors.push(rule.message || '校验失败');
         }
       }
 
       // custom function (JS object only, not JSON-safe)
       if (rule.custom && typeof rule.custom === 'function') {
-        if (!rule.custom(value)) {
+        if (!safeCall(rule.custom, value)) {
           errors.push(rule.message || '校验失败');
         }
       }

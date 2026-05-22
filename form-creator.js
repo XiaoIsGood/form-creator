@@ -678,7 +678,10 @@
     }
 
     _handleChange() {
-      if (this._validateOnBlur && this._touched) this.validate();
+      if (this._validateOnBlur) {
+        this._touched = true;
+        this.validate();
+      }
       this._onChange();
     }
   }

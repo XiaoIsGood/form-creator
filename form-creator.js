@@ -677,6 +677,42 @@ input[type="color"].fc-input {
         try { fn(values, name); } catch (e) { /* silent */ }
       });
     }
+
+    getValues() {
+      const values = {};
+      this._fields.forEach((field, name) => {
+        values[name] = field.getValue();
+      });
+      return values;
+    }
+
+    setValues(data) {
+      if (!data) return;
+      Object.keys(data).forEach(name => {
+        const field = this._fields.get(name);
+        if (field) field.setValue(data[name]);
+      });
+    }
+
+    validate() {
+      let valid = true;
+      const errors = {};
+      this._fields.forEach((field, name) => {
+        const fieldErrors = field.validate();
+        if (fieldErrors.length > 0) {
+          valid = false;
+          errors[name] = fieldErrors;
+        }
+      });
+      return { valid, errors };
+    }
+
+    reset() {
+      this._fields.forEach((field, name) => {
+        const config = this._schema.find(f => f.name === name);
+        if (config) field.setValue(config.defaultValue);
+      });
+    }
   }
 
 })();

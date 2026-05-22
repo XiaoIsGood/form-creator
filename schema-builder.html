@@ -444,13 +444,17 @@ function doImport() {
   }
 }
 
-function openPreview(html) {
-  const blob = new Blob([html], { type: 'text/html' });
-  window.open(URL.createObjectURL(blob));
+function singlePreview() {
+  const html = previewHtml();
+  const w = window.open('', '_blank');
+  w.document.write(html);
 }
 
-function singlePreview() { openPreview(previewHtml()); }
-function jsonPreview() { openPreview(jsonPreviewHtml()); }
+function jsonPreview() {
+  const html = jsonPreviewHtml();
+  const w = window.open('', '_blank');
+  w.document.write(html);
+}
 
 function previewHtml() {
   const schema = buildSchema();
